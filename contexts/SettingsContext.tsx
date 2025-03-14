@@ -50,7 +50,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   // Function to update settings
   const updateSettings = (newSettings: Partial<Settings>) => {
-    setSettings((prevSettings) => {
+    setSettings((prevSettings: Settings) => {
       const updatedSettings = { ...prevSettings, ...newSettings }
 
       // If stimuliCount changes, adjust targetAngles array length
