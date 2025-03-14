@@ -21,32 +21,27 @@ interface SettingsContextType {
 // Create the context
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
 
+// Initial default settings
+const defaultSettings: Settings = {
+  stimuliCount: 3,
+  anglesPerQuadrant: 1,
+  correctQuadrant: 1,
+  useCorrectQuadrant: false,
+  degreeVariance: 7.5,
+  targetAngles: [30, 60, 120]
+}
+
 // SettingsProvider component: Provides global settings context
 export function SettingsProvider({ children }: { children: ReactNode }) {
-  // Initialize settings with default values or values from localStorage
-  const [settings, setSettings] = useState<Settings>(() => {
-    if (typeof window !== "undefined") {
-      const savedSettings = localStorage.getItem("dementiaTestSettings")
-      return savedSettings
-        ? JSON.parse(savedSettings)
-        : {
-            stimuliCount: 3,
-            anglesPerQuadrant: 1,
-            correctQuadrant: 1,
-            useCorrectQuadrant: false,
-            degreeVariance: 7.5,
-            targetAngles: [30, 60, 120], // Default target angles
-          }
+  const [settings, setSettings] = useState<Settings>(defaultSettings)
+
+  // Load settings from localStorage on client-side only
+  useEffect(() => {
+    const savedSettings = localStorage.getItem("dementiaTestSettings")
+    if (savedSettings) {
+      setSettings(JSON.parse(savedSettings))
     }
-    return {
-      stimuliCount: 3,
-      anglesPerQuadrant: 1,
-      correctQuadrant: 1,
-      useCorrectQuadrant: false,
-      degreeVariance: 7.5,
-      targetAngles: [30, 60, 120], // Default target angles
-    }
-  })
+  }, [])
 
   // Function to update settings
   const updateSettings = (newSettings: Partial<Settings>) => {
