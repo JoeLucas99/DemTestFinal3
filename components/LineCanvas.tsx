@@ -35,9 +35,17 @@ export default function LineCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [hoveredLine, setHoveredLine] = useState<Line | null>(null)
   const [lines, setLines] = useState<Line[]>([])
+  const [selectedLineId, setSelectedLineId] = useState<string | null>(null)
+
+  useEffect(() => {
+    console.log("Angles received:", angles)
+    console.log("Lines generated:", lines)
+  }, [angles, lines])
 
   // Initialize lines with unique IDs, quadrants, and positions
   useEffect(() => {
+    if (angles.length === 0) return
+
     const anglesPerQuadrant = Math.ceil(angles.length / 4)
     const quadrantSize = size / 2
     const newLines = angles.map((angle, index) => {
@@ -46,44 +54,56 @@ export default function LineCanvas({
 
       // Calculate position based on the quadrant and index
       let x, y
-      const padding = size * 0.15 // 15% padding
-      const availableSpace = quadrantSize - padding * 2
 
-      // Position calculation based on number of angles per quadrant
+      // Use a fixed grid system with smaller margins to utilize more space
+      const margin = size * 0.1 // 10% margin from edges (reduced from 15%)
+      const innerSize = size - margin * 2 // Available inner area
+      const halfInnerSize = innerSize / 2
+
+      // Define quadrant origins with margins
+      const leftX = margin
+      const rightX = margin + halfInnerSize
+      const topY = margin
+      const bottomY = margin + halfInnerSize
+
+      // Calculate positions based on number of angles per quadrant
       if (anglesPerQuadrant === 1) {
-        x = quadrant % 2 === 0 ? padding : quadrantSize + padding
-        y = quadrant < 2 ? padding : quadrantSize + padding
+        // For 1 angle per quadrant, place it in the center of the quadrant
+        x = quadrant % 2 === 0 ? leftX + halfInnerSize * 0.5 : rightX + halfInnerSize * 0.5
+        y = quadrant < 2 ? topY + halfInnerSize * 0.5 : bottomY + halfInnerSize * 0.5
       } else if (anglesPerQuadrant === 2) {
-        x =
-          quadrant % 2 === 0
-            ? padding + angleIndexInQuadrant * availableSpace
-            : quadrantSize + padding + (1 - angleIndexInQuadrant) * availableSpace
-        y = quadrant < 2 ? padding : quadrantSize + padding
-      } else if (anglesPerQuadrant === 3) {
+        // For 2 angles per quadrant, place them diagonally with more spread (25%/75% instead of 30%/70%)
         if (angleIndexInQuadrant === 0) {
-          x = quadrant % 2 === 0 ? padding : quadrantSize + padding
-          y = quadrant < 2 ? padding : quadrantSize + padding
+          x = quadrant % 2 === 0 ? leftX + halfInnerSize * 0.25 : rightX + halfInnerSize * 0.25
+          y = quadrant < 2 ? topY + halfInnerSize * 0.25 : bottomY + halfInnerSize * 0.25
         } else {
-          x =
-            quadrant % 2 === 0
-              ? padding + (angleIndexInQuadrant - 1) * availableSpace
-              : quadrantSize + padding + (2 - angleIndexInQuadrant) * availableSpace
-          y = quadrant < 2 ? padding + availableSpace : quadrantSize + padding + availableSpace
+          x = quadrant % 2 === 0 ? leftX + halfInnerSize * 0.75 : rightX + halfInnerSize * 0.75
+          y = quadrant < 2 ? topY + halfInnerSize * 0.75 : bottomY + halfInnerSize * 0.75
+        }
+      } else if (anglesPerQuadrant === 3) {
+        // For 3 angles per quadrant, place them in a more spread triangle pattern
+        if (angleIndexInQuadrant === 0) {
+          x = quadrant % 2 === 0 ? leftX + halfInnerSize * 0.5 : rightX + halfInnerSize * 0.5
+          y = quadrant < 2 ? topY + halfInnerSize * 0.2 : bottomY + halfInnerSize * 0.2 // Moved from 0.25 to 0.2
+        } else if (angleIndexInQuadrant === 1) {
+          x = quadrant % 2 === 0 ? leftX + halfInnerSize * 0.2 : rightX + halfInnerSize * 0.2 // Moved from 0.25 to 0.2
+          y = quadrant < 2 ? topY + halfInnerSize * 0.75 : bottomY + halfInnerSize * 0.75 // Moved from 0.7 to 0.75
+        } else {
+          x = quadrant % 2 === 0 ? leftX + halfInnerSize * 0.8 : rightX + halfInnerSize * 0.8 // Moved from 0.75 to 0.8
+          y = quadrant < 2 ? topY + halfInnerSize * 0.75 : bottomY + halfInnerSize * 0.75 // Moved from 0.7 to 0.75
         }
       } else {
-        // 4 angles per quadrant
-        x =
-          quadrant % 2 === 0
-            ? padding + (angleIndexInQuadrant % 2) * availableSpace
-            : quadrantSize + padding + (1 - (angleIndexInQuadrant % 2)) * availableSpace
-        y =
-          quadrant < 2
-            ? Math.floor(angleIndexInQuadrant / 2) === 0
-              ? padding
-              : padding + availableSpace
-            : Math.floor(angleIndexInQuadrant / 2) === 0
-              ? quadrantSize + padding
-              : quadrantSize + padding + availableSpace
+        // 4 angles per quadrant - use a 2x2 grid with more spread (20%/80% instead of 25%/75%)
+        const gridX = angleIndexInQuadrant % 2 // 0 or 1
+        const gridY = Math.floor(angleIndexInQuadrant / 2) // 0 or 1
+
+        // Position at 20% or 80% of the quadrant for more spread
+        const xOffset = gridX === 0 ? 0.2 : 0.8
+        const yOffset = gridY === 0 ? 0.2 : 0.8
+
+        x = quadrant % 2 === 0 ? leftX + halfInnerSize * xOffset : rightX + halfInnerSize * xOffset
+
+        y = quadrant < 2 ? topY + halfInnerSize * yOffset : bottomY + halfInnerSize * yOffset
       }
 
       return {
@@ -93,10 +113,11 @@ export default function LineCanvas({
         position: { x, y },
       }
     })
+
     setLines(newLines)
   }, [angles, size])
 
-  // Function to draw a line on the canvas
+  // Function to draw a line on the canvas - update to make target angles larger
   const drawLine = useCallback(
     (
       ctx: CanvasRenderingContext2D,
@@ -108,7 +129,9 @@ export default function LineCanvas({
       length: number = size / 10,
       isTarget = false,
     ) => {
-      const radians = (angle * Math.PI) / 180
+      // Normalize angle to 0-360 range
+      const normalizedAngle = ((angle % 360) + 360) % 360
+      const radians = (normalizedAngle * Math.PI) / 180
       const endX = startX + Math.cos(radians) * length
       const endY = startY - Math.sin(radians) * length
 
@@ -116,13 +139,13 @@ export default function LineCanvas({
       ctx.moveTo(startX, startY)
       ctx.lineTo(endX, endY)
       ctx.strokeStyle = color
-      ctx.lineWidth = lineWidth
+      ctx.lineWidth = lineWidth // Use the same line width for all angles
       ctx.stroke()
     },
     [size],
   )
 
-  // Effect to draw lines on the canvas
+  // Effect to draw lines on the canvas - update to make target angles longer
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -132,14 +155,15 @@ export default function LineCanvas({
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    const lineLength = size / 8 // Uniform length for all lines
+    // Use a shorter line length for option angles to avoid touching the canvas edge
+    const lineLength = targetAngle !== undefined ? size / 5 : size / 7 // Shorter lines for options
 
     if (targetAngle !== undefined) {
-      // Draw the target angle
-      drawLine(ctx, size / 2, size / 2, targetAngle, "black", 3, lineLength, true)
+      // Draw the target angle with the same length as before
+      drawLine(ctx, size / 2, size / 2, targetAngle, "black", 6, lineLength)
     } else {
       lines.forEach((line) => {
-        const isSelected = line.angle === selectedAngle
+        const isSelected = line.id === selectedLineId
         const isHovered = line.id === hoveredLine?.id
         const color = isSelected ? "blue" : isHovered && !disabled ? "lightblue" : "black"
         const lineWidth = isSelected || (isHovered && !disabled) ? 8 : 6
@@ -147,33 +171,54 @@ export default function LineCanvas({
         drawLine(ctx, line.position.x, line.position.y, line.angle, color, lineWidth, lineLength)
       })
     }
-  }, [lines, targetAngle, selectedAngle, hoveredLine, size, drawLine, disabled])
+  }, [lines, targetAngle, selectedLineId, hoveredLine, size, drawLine, disabled])
 
-  // Function to check if a point is near a line
+  // Update the isPointNearLine function to be much more precise
   const isPointNearLine = useCallback(
     (x: number, y: number, line: Line) => {
-      const lineLength = Math.min(size / 3, 150)
-      const radians = (line.angle * Math.PI) / 180
-      let endX = line.position.x + Math.cos(radians) * lineLength
-      let endY = line.position.y - Math.sin(radians) * lineLength
+      const lineLength = size / 7 // Match the shorter line length used for options
+      // Normalize angle to 0-360 range
+      const normalizedAngle = ((line.angle % 360) + 360) % 360
+      const radians = (normalizedAngle * Math.PI) / 180
 
-      // Adjust end points to keep lines within canvas
-      const padding = 20
-      endX = Math.max(padding, Math.min(endX, size - padding))
-      endY = Math.max(padding, Math.min(endY, size - padding))
+      // Calculate the end point of the line
+      const endX = line.position.x + Math.cos(radians) * lineLength
+      const endY = line.position.y - Math.sin(radians) * lineLength
 
-      const distToLine =
-        Math.abs(
-          (endY - line.position.y) * x - (endX - line.position.x) * y + endX * line.position.y - endY * line.position.x,
-        ) / Math.sqrt((endY - line.position.y) ** 2 + (endX - line.position.x) ** 2)
+      // Vector from line start to end
+      const lineVectorX = endX - line.position.x
+      const lineVectorY = endY - line.position.y
+      const lineLength2 = lineVectorX * lineVectorX + lineVectorY * lineVectorY
 
-      const isWithinLineSegment =
-        x >= Math.min(line.position.x, endX) - 10 &&
-        x <= Math.max(line.position.x, endX) + 10 &&
-        y >= Math.min(line.position.y, endY) - 10 &&
-        y <= Math.max(line.position.y, endY) + 10
+      // If the line has zero length, just check distance to the point
+      if (lineLength2 === 0) {
+        return (
+          Math.sqrt((x - line.position.x) * (x - line.position.x) + (y - line.position.y) * (y - line.position.y)) <= 5
+        )
+      }
 
-      return distToLine <= 5 && isWithinLineSegment
+      // Calculate projection of point onto line
+      const t = ((x - line.position.x) * lineVectorX + (y - line.position.y) * lineVectorY) / lineLength2
+
+      // If t is outside [0,1], the closest point is one of the endpoints
+      if (t < 0) {
+        return (
+          Math.sqrt((x - line.position.x) * (x - line.position.x) + (y - line.position.y) * (y - line.position.y)) <= 5
+        )
+      }
+      if (t > 1) {
+        return Math.sqrt((x - endX) * (x - endX) + (y - endY) * (y - endY)) <= 5
+      }
+
+      // Closest point on line
+      const closestX = line.position.x + t * lineVectorX
+      const closestY = line.position.y + t * lineVectorY
+
+      // Distance from point to closest point on line
+      const distance = Math.sqrt((x - closestX) * (x - closestX) + (y - closestY) * (y - closestY))
+
+      // Very strict threshold - only detect clicks very close to the line
+      return distance <= 5
     },
     [size],
   )
@@ -193,11 +238,17 @@ export default function LineCanvas({
       const clickedLines = lines.filter((line) => isPointNearLine(x, y, line))
 
       if (clickedLines.length > 0) {
+        // Find the closest line to the click point
         const closestLine = clickedLines.reduce((closest, current) => {
           const distToCurrent = Math.hypot(current.position.x - x, current.position.y - y)
           const distToClosest = Math.hypot(closest.position.x - x, closest.position.y - y)
           return distToCurrent < distToClosest ? current : closest
         })
+
+        // Store the selected line ID to only highlight this specific line
+        setSelectedLineId(closestLine.id)
+
+        // Only select this specific line's angle
         onSelect(closestLine.angle)
       }
     },

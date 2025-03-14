@@ -4,7 +4,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath: '/DementiaTest_Feb25', // Replace with your repository name if different
+  basePath: '/DemTestFinal3', // Replace with your repository name if different
 }
 
 export default nextConfig;

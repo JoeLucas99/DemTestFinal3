@@ -9,6 +9,7 @@ export interface Settings {
   correctQuadrant: number
   useCorrectQuadrant: boolean
   degreeVariance: number
+  targetAngles: number[] // Array of target angles for each stimulus
 }
 
 // Interface defining the shape of our context
@@ -33,7 +34,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             anglesPerQuadrant: 1,
             correctQuadrant: 1,
             useCorrectQuadrant: false,
-            degreeVariance: 10,
+            degreeVariance: 7.5,
+            targetAngles: [30, 60, 120], // Default target angles
           }
     }
     return {
@@ -41,7 +43,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       anglesPerQuadrant: 1,
       correctQuadrant: 1,
       useCorrectQuadrant: false,
-      degreeVariance: 10,
+      degreeVariance: 7.5,
+      targetAngles: [30, 60, 120], // Default target angles
     }
   })
 
@@ -49,6 +52,20 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const updateSettings = (newSettings: Partial<Settings>) => {
     setSettings((prevSettings) => {
       const updatedSettings = { ...prevSettings, ...newSettings }
+
+      // If stimuliCount changes, adjust targetAngles array length
+      if (newSettings.stimuliCount !== undefined && newSettings.stimuliCount !== prevSettings.stimuliCount) {
+        // Generate appropriate default angles
+        const newTargetAngles = Array(newSettings.stimuliCount)
+          .fill(0)
+          .map((_, i) => {
+            // Use existing angles if available, otherwise generate random ones
+            return prevSettings.targetAngles[i] || Math.floor(Math.random() * 36) * 10
+          })
+
+        updatedSettings.targetAngles = newTargetAngles
+      }
+
       localStorage.setItem("dementiaTestSettings", JSON.stringify(updatedSettings))
       return updatedSettings
     })
