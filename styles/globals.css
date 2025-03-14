@@ -1,0 +1,44 @@
+/* Import Tailwind CSS base styles */
+@tailwind base;
+/* Import Tailwind CSS component styles */
+@tailwind components;
+/* Import Tailwind CSS utility styles */
+@tailwind utilities;
+
+/* Add any global styles here */
+body {
+  @apply bg-white text-black;
+}
+
+/* Ensure proper styling in fullscreen mode */
+:fullscreen {
+  @apply bg-white text-black;
+}
+
+.radix-select-content {
+  position: absolute !important;
+  width: var(--radix-select-trigger-width);
+  max-height: var(--radix-select-content-available-height);
+  overflow: hidden;
+  background-color: white;
+  border-radius: 6px;
+  box-shadow: 0px 10px 38px -10px rgba(22, 23, 24, 0.35), 0px 10px 20px -15px rgba(22, 23, 24, 0.2);
+  z-index: 1000;
+}
+
+.radix-select-viewport {
+  padding: 5px;
+}
+
+.radix-select-item {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  user-select: none;
+}
+
+.radix-select-item[data-highlighted] {
+  outline: none;
+  background-color: #f3f4f6;
+}
+
