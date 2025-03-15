@@ -51,12 +51,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       console.error('Error loading settings:', error)
       // On error, fall back to default settings
       setSettings(defaultSettings)
+    } finally {
+      setIsLoading(false)
     }
-  }, [])
-
-  // Once we can access settings, we're on the client side
-  useEffect(() => {
-    setIsLoading(false)
   }, [])
 
   // Function to update settings
@@ -105,5 +102,15 @@ export function useSettings() {
     throw new Error("useSettings must be used within a SettingsProvider")
   }
   return context
+}
+
+function generateStimuli(settings: Settings): Stimulus[] {
+  if (!settings) {
+    console.error('Settings not available')
+    return []
+  }
+
+  const { stimuliCount, anglesPerQuadrant, correctQuadrant, useCorrectQuadrant, degreeVariance, targetAngles } = settings
+  // Rest of your function...
 }
 
