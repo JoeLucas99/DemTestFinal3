@@ -34,13 +34,29 @@ const defaultSettings: Settings = {
 // SettingsProvider component: Provides global settings context
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings>(defaultSettings)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Load settings from localStorage on client-side only
   useEffect(() => {
-    const savedSettings = localStorage.getItem("dementiaTestSettings")
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings))
+    try {
+      const savedSettings = localStorage.getItem("dementiaTestSettings")
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings)
+        // Validate that the parsed data has the required fields
+        if (parsed.stimuliCount && Array.isArray(parsed.targetAngles)) {
+          setSettings(parsed)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error)
+      // On error, fall back to default settings
+      setSettings(defaultSettings)
     }
+  }, [])
+
+  // Once we can access settings, we're on the client side
+  useEffect(() => {
+    setIsLoading(false)
   }, [])
 
   // Function to update settings
@@ -72,6 +88,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("dementiaTestSettings", JSON.stringify(settings))
     }
   }, [settings])
+
+  if (isLoading) {
+    return <div className="flex min-h-screen items-center justify-center">
+      <div className="text-2xl">Loading...</div>
+    </div>
+  }
 
   return <SettingsContext.Provider value={{ settings, updateSettings }}>{children}</SettingsContext.Provider>
 }
