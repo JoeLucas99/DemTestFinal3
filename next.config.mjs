@@ -1,10 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable static exports for GitHub Pages deployment
   output: 'export',
+  
+  // Disable image optimization for static export
   images: {
     unoptimized: true,
   },
-  basePath: '/DementiaTest_Feb25', // Replace with your repository name if different
+  
+  // Set the base path for GitHub Pages deployment
+  // This should match your repository name
+  basePath: '/DemTestFinal3',
 }
 
 export default nextConfig;

@@ -14,72 +14,168 @@ interface Stimulus {
   options: number[]
 }
 
+// Helper function to determine if an angle is acute or obtuse
+function getAngleCategory(angle: number): "acute" | "obtuse" | "right" {
+  // Normalize angle to 0-180 range
+  const normalizedAngle = angle % 180
+
+  if (normalizedAngle === 90) return "right"
+  if (normalizedAngle < 90) return "acute"
+  return "obtuse"
+}
+
+// Helper function to get all possible angles in a category within variance
+function getPossibleAngles(
+  targetAngle: number,
+  degreeVariance: number,
+  category: "acute" | "obtuse" | "right",
+): number[] {
+  const possibleAngles: number[] = []
+
+  // Define the range based on category
+  let minAngle = 0
+  let maxAngle = 0
+
+  if (category === "acute") {
+    minAngle = 0
+    maxAngle = 80
+  } else if (category === "obtuse") {
+    minAngle = 100
+    maxAngle = 180
+  } else {
+    // right
+    minAngle = 80
+    maxAngle = 100
+  }
+
+  // Generate all possible angles within the category and variance
+  for (let angle = minAngle; angle <= maxAngle; angle += 10) {
+    // Skip the target angle
+    if (angle === targetAngle) continue
+
+    // Check if the angle is within the variance
+    if (Math.abs(angle - targetAngle) <= degreeVariance) {
+      possibleAngles.push(angle)
+    }
+  }
+
+  return possibleAngles
+}
+
+// Helper function to normalize angles to 0-360 range
+function normalizeAngle(angle: number): number {
+  // Ensure angle is between 0 and 360
+  return ((angle % 360) + 360) % 360
+}
+
 // Function to generate stimuli based on current settings
 function generateStimuli(settings: Settings): Stimulus[] {
-  const { stimuliCount, anglesPerQuadrant, correctQuadrant, useCorrectQuadrant } = settings
-  return Array.from({ length: stimuliCount }, () => {
-    const targetAngle = Math.floor(Math.random() * 18) * 10 // Ensure target angle is a multiple of 10
+  const { stimuliCount, anglesPerQuadrant, correctQuadrant, useCorrectQuadrant, degreeVariance, targetAngles } =
+    settings
 
-    // Generate options for each quadrant
-    const quadrants = [0, 1, 2, 3].map((quadrantIndex) => {
-      const quadrantAngles: number[] = []
-      const quadrantStart = quadrantIndex * 90 // Each quadrant is 90 degrees
+  console.log("Generating stimuli with settings:", settings)
 
-      // Always include the target angle in the correct quadrant if useCorrectQuadrant is true
-      if (useCorrectQuadrant && quadrantIndex === correctQuadrant - 1) {
-        quadrantAngles.push(targetAngle)
+  return Array.from({ length: stimuliCount }, (_, stimulusIndex) => {
+    // Use the target angle from settings, ensuring it's within 0-360 range
+    const targetAngle = normalizeAngle(targetAngles[stimulusIndex] || Math.floor(Math.random() * 36) * 10) // 0-350 degrees in steps of 10
+    const targetCategory = getAngleCategory(targetAngle)
+
+    // Total number of angles needed
+    const totalAnglesNeeded = anglesPerQuadrant * 4
+    console.log(`Stimulus ${stimulusIndex}: Target angle ${targetAngle}, need ${totalAnglesNeeded} total angles`)
+
+    // Start with the target angle
+    let options: number[] = [targetAngle]
+
+    // Generate angles in a chain, where each new angle is within the degree variation of at least one existing angle
+    while (options.length < totalAnglesNeeded) {
+      // Pick a random angle from the existing options to branch from
+      const baseAngle = options[Math.floor(Math.random() * options.length)]
+
+      // Calculate the new angle with exact variance
+      const direction = Math.random() > 0.5 ? 1 : -1
+
+      // Apply the exact variance (not a random value between 0 and max)
+      let newAngle = baseAngle + direction * degreeVariance
+
+      // Normalize to 0-360 range
+      newAngle = normalizeAngle(newAngle)
+
+      // Ensure the angle is within the same category (acute, obtuse, right)
+      if (targetCategory === "acute") {
+        newAngle = Math.max(0, Math.min(80, newAngle))
+      } else if (targetCategory === "obtuse") {
+        newAngle = Math.max(100, Math.min(180, newAngle))
+      } else {
+        // right
+        newAngle = Math.max(80, Math.min(100, newAngle))
       }
 
-      // Fill the rest of the quadrant with angles
-      while (quadrantAngles.length < anglesPerQuadrant) {
-        let newAngle: number
-        let attempts = 0
-        const maxAttempts = 100 // Prevent infinite loop
-
-        do {
-          newAngle = Math.floor(Math.random() * 90) + quadrantStart // Angle within the quadrant
-          newAngle = Math.round(newAngle / 10) * 10 // Round to nearest 10
-          attempts++
-        } while (
-          (quadrantAngles.includes(newAngle) ||
-            newAngle === targetAngle ||
-            quadrantAngles.some((angle) => Math.abs(angle - newAngle) < 20)) &&
-          attempts < maxAttempts
-        )
-
-        if (attempts < maxAttempts) {
-          quadrantAngles.push(newAngle)
-        }
-      }
-
-      return quadrantAngles
-    })
-
-    // Flatten the quadrants into a single array of options
-    let options = quadrants.flat()
-
-    // If the target angle is not included, replace a random angle with it
-    if (!options.includes(targetAngle)) {
-      const randomIndex = Math.floor(Math.random() * options.length)
-      options[randomIndex] = targetAngle
+      // Add the new angle to options without rounding to nearest 10
+      options.push(newAngle)
     }
 
-    // Remove any duplicates of the target angle
-    options = options.map((angle) => (angle === targetAngle ? targetAngle : angle))
-    options = [...new Set(options)]
+    // Make sure there's exactly one correct angle
+    const correctCount = options.filter((angle) => angle === targetAngle).length
+    if (correctCount > 1) {
+      // Remove excess correct angles
+      for (let i = 0; i < correctCount - 1; i++) {
+        const index = options.findIndex((angle) => angle === targetAngle)
+        if (index > 0) {
+          // Keep at least one
+          options.splice(index, 1)
 
-    // If we removed duplicates, add new unique angles to maintain the correct number of options
-    while (options.length < anglesPerQuadrant * 4) {
-      let newAngle: number
-      do {
-        newAngle = Math.floor(Math.random() * 360)
-        newAngle = Math.round(newAngle / 10) * 10 // Round to nearest 10
-      } while (
-        options.includes(newAngle) ||
-        newAngle === targetAngle ||
-        options.some((angle) => Math.abs(angle - newAngle) < 20)
-      )
-      options.push(newAngle)
+          // Add a new angle that's within variation of an existing angle
+          const baseAngle = options[Math.floor(Math.random() * options.length)]
+
+          const direction = Math.random() > 0.5 ? 1 : -1
+          let newAngle = baseAngle + direction * degreeVariance
+          newAngle = normalizeAngle(newAngle)
+
+          // Ensure it's not the target angle
+          if (Math.abs(newAngle - targetAngle) < 1) {
+            newAngle = normalizeAngle(targetAngle + degreeVariance * (direction === 1 ? 1 : -1))
+          }
+
+          // Apply category constraints
+          if (targetCategory === "acute") {
+            newAngle = Math.max(0, Math.min(80, newAngle))
+          } else if (targetCategory === "obtuse") {
+            newAngle = Math.max(100, Math.min(180, newAngle))
+          } else {
+            // right
+            newAngle = Math.max(80, Math.min(100, newAngle))
+          }
+
+          options.push(newAngle)
+        }
+      }
+    }
+
+    console.log(`Final options (${options.length}):`, options)
+
+    // Shuffle the options
+    options = options.sort(() => Math.random() - 0.5)
+
+    // If useCorrectQuadrant is true, ensure the target angle is in the correct quadrant
+    if (useCorrectQuadrant) {
+      // Reorganize options to ensure target is in correct quadrant
+      const quadrantSize = anglesPerQuadrant
+      const targetQuadrantStart = (correctQuadrant - 1) * quadrantSize
+      const targetQuadrantEnd = targetQuadrantStart + quadrantSize
+
+      // Find the current position of the target angle
+      const targetIndex = options.indexOf(targetAngle)
+
+      // If target is not in the correct quadrant, swap it with a random angle in the correct quadrant
+      if (targetIndex < targetQuadrantStart || targetIndex >= targetQuadrantEnd) {
+        const randomIndexInCorrectQuadrant = targetQuadrantStart + Math.floor(Math.random() * quadrantSize)
+        // Swap
+        ;[options[targetIndex], options[randomIndexInCorrectQuadrant]] = [
+          options[randomIndexInCorrectQuadrant],
+          options[targetIndex],
+        ]
+      }
     }
 
     return { targetAngle, options }
@@ -88,6 +184,7 @@ function generateStimuli(settings: Settings): Stimulus[] {
 
 // Test component: Manages the test logic and UI
 export default function Test() {
+  // Get settings from context and initialize state
   const { settings } = useSettings()
   const [stimuli, setStimuli] = useState<Stimulus[]>(() => generateStimuli(settings))
   const [currentStimulusIndex, setCurrentStimulusIndex] = useState(-1)
@@ -115,7 +212,8 @@ export default function Test() {
     const handleResize = () => {
       const isLandscape = window.innerWidth > window.innerHeight
       setIsLandscape(isLandscape)
-      setCanvasSize(Math.min(isLandscape ? window.innerHeight - 100 : window.innerWidth - 32, 800))
+      // Increase the maximum canvas size from 600 to 650
+      setCanvasSize(Math.min(isLandscape ? window.innerHeight - 100 : window.innerWidth - 30, 650))
     }
     handleResize()
     window.addEventListener("resize", handleResize)
@@ -196,25 +294,32 @@ export default function Test() {
     return () => clearTimeout(timer)
   }, [handleStartTest])
 
+  // Show loading state if no stimuli are generated
   if (stimuli.length === 0 || (currentStimulusIndex === -1 && !showFullscreenPrompt)) {
     return <div>Loading...</div>
   }
 
   const stimulus = stimuli[currentStimulusIndex]
 
+  console.log("Current stimulus:", stimulus)
+  console.log("Options length:", stimulus.options.length)
+  console.log("Settings:", settings)
+
   return (
     <SettingsProvider>
       <div className="flex flex-col items-center justify-center min-h-screen p-4 select-none">
-        <div className="w-full max-w-4xl flex flex-col items-center relative">
+        <div className="w-full max-w-3xl flex flex-col items-center relative">
+          {/* Target angle display */}
           <div className="flex items-center justify-center w-full mb-8 relative">
             <LineCanvas
               angles={[stimulus.targetAngle]}
               targetAngle={stimulus.targetAngle}
-              size={400}
+              size={350} // Increased from 300 to give more space
               className="mr-4"
             />
+            {/* Next/Finish button */}
             {selectedAngle !== null && (
-              <div className="absolute right-0 top-1/2 transform -translate-y-1/2">
+              <div className="absolute right-[-40px] top-1/2 transform -translate-y-1/2">
                 <Button
                   onClick={handleNextStimulus}
                   className="text-xl py-3 px-6 bg-black text-white hover:bg-gray-800"
@@ -224,6 +329,7 @@ export default function Test() {
               </div>
             )}
           </div>
+          {/* Options display */}
           <LineCanvas
             angles={stimulus.options}
             onSelect={handleSelection}

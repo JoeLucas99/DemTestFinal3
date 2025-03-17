@@ -1,29 +1,47 @@
 {
   "compilerOptions": {
+    // Target ECMAScript version for compilation
     "target": "es2015",
+    // Include type definitions for DOM and modern JavaScript features
     "lib": ["dom", "dom.iterable", "esnext"],
+    // Allow JavaScript files to be compiled
     "allowJs": true,
+    // Skip type checking of declaration files
     "skipLibCheck": true,
+    // Enable strict type checking
     "strict": true,
+    // Ensure consistent casing in file names
     "forceConsistentCasingInFileNames": true,
+    // Don't emit output files (Next.js handles this)
     "noEmit": true,
+    // Enable ES module interop
     "esModuleInterop": true,
+    // Use ES modules for module resolution
     "module": "esnext",
+    // Use Node.js module resolution strategy
     "moduleResolution": "node",
+    // Allow importing JSON files
     "resolveJsonModule": true,
+    // Ensure each file is treated as a separate module
     "isolatedModules": true,
+    // Preserve JSX for Next.js
     "jsx": "preserve",
+    // Enable incremental compilation
     "incremental": true,
+    // Enable Next.js TypeScript plugin
     "plugins": [
       {
         "name": "next"
       }
     ],
+    // Configure path aliases for imports
     "paths": {
       "@/*": ["./*"]
     }
   },
+  // Include TypeScript and type declaration files
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  // Exclude node_modules from compilation
   "exclude": ["node_modules"]
 }
 

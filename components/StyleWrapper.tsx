@@ -3,12 +3,15 @@
 import type React from "react"
 
 // StyleWrapper component: Applies global styles to its children
+// This component provides essential global styles for the application,
+// including user selection prevention and landscape mode handling
 export default function StyleWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
       <style jsx global>{`
-        /* Disable user selection */
+        /* Disable user selection across the entire application */
+        /* This prevents text selection which could interfere with the test */
         body {
           user-select: none;
           -webkit-user-select: none;
@@ -16,7 +19,8 @@ export default function StyleWrapper({ children }: { children: React.ReactNode }
           -ms-user-select: none;
         }
         
-        /* Disable dragging and touch callout */
+        /* Disable dragging and touch callout for better mobile experience */
+        /* These styles prevent unwanted interactions on mobile devices */
         * {
           -webkit-user-drag: none;
           -khtml-user-drag: none;
@@ -31,7 +35,8 @@ export default function StyleWrapper({ children }: { children: React.ReactNode }
           user-select: none;
         }
 
-        /* Rotate content in landscape mode */
+        /* Handle landscape orientation for better mobile experience */
+        /* This ensures proper display when device is rotated */
         @media (orientation: landscape) {
           .landscape-rotate {
             display: flex;

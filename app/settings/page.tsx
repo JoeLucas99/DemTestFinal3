@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useRouter } from "next/navigation"
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
@@ -9,27 +8,66 @@ import { Label } from "../../components/ui/label"
 import { Switch } from "../../components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
 import { useSettings } from "../../contexts/SettingsContext"
+import { useState, useEffect } from "react"
 
+// Settings page component that allows users to configure test parameters
 export default function Settings() {
+  // Get settings and update function from context
   const { settings, updateSettings } = useSettings()
-  const { stimuliCount, anglesPerQuadrant, correctQuadrant, useCorrectQuadrant, degreeVariance } = settings
+  const { stimuliCount, anglesPerQuadrant, correctQuadrant, useCorrectQuadrant, degreeVariance, targetAngles } =
+    settings
   const router = useRouter()
+  // Local state for target angles to handle input changes
+  const [localTargetAngles, setLocalTargetAngles] = useState<string[]>([])
 
+  // Initialize local target angles from settings when component mounts
+  useEffect(() => {
+    setLocalTargetAngles(targetAngles.map((angle) => angle.toString()))
+  }, [targetAngles])
+
+  // Handle form submission - updates settings and returns to home page
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // You can add any additional logic here if needed
+
+    // Convert local target angles to numbers and update settings
+    const numericTargetAngles = localTargetAngles.map((angle) => Number.parseInt(angle) || 0)
+
+    updateSettings({ targetAngles: numericTargetAngles })
     router.push("/")
   }
 
+  // Handle degree variance changes - rounds to nearest 2.5 and clamps between 7.5 and 50
   const handleDegreeVarianceChange = (value: string) => {
-    const numValue = Math.max(10, Math.min(50, Math.round(Number(value) / 10) * 10))
-    updateSettings({ degreeVariance: numValue })
+    const numValue = Number.parseFloat(value)
+    // Round to the nearest 2.5 instead of 10
+    const roundedValue = Math.max(7.5, Math.min(50, Math.round(numValue / 2.5) * 2.5))
+    updateSettings({ degreeVariance: roundedValue })
+  }
+
+  // Handle target angle changes - ensures values are between 1 and 179 degrees
+  const handleTargetAngleChange = (index: number, value: string) => {
+    const newAngles = [...localTargetAngles]
+    // Ensure the value is within 1-179 range
+    const numValue = Number(value)
+    if (!isNaN(numValue)) {
+      const clampedValue = Math.min(179, Math.max(1, numValue))
+      newAngles[index] = clampedValue.toString()
+    } else {
+      newAngles[index] = value
+    }
+    setLocalTargetAngles(newAngles)
+  }
+
+  // Handle stimuli count changes
+  const handleStimuliCountChange = (value: number) => {
+    updateSettings({ stimuliCount: value })
   }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <h1 className="text-5xl font-bold mb-8">Settings</h1>
       <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6">
+        {/* Number of stimuli input */}
         <div>
           <Label htmlFor="stimuliCount" className="text-xl">
             Number of Stimuli
@@ -38,11 +76,38 @@ export default function Settings() {
             id="stimuliCount"
             type="number"
             value={stimuliCount}
-            onChange={(e) => updateSettings({ stimuliCount: Number(e.target.value) })}
+            onChange={(e) => handleStimuliCountChange(Number(e.target.value))}
             min={1}
             className="text-xl py-2 px-3"
           />
         </div>
+
+        {/* Target angles inputs */}
+        <div className="space-y-3">
+          <Label className="text-xl">Target Angles</Label>
+          {localTargetAngles.map((angle, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <Label htmlFor={`targetAngle-${index}`} className="text-lg min-w-[100px]">
+                Stimulus {index + 1}:
+              </Label>
+              <Input
+                id={`targetAngle-${index}`}
+                type="number"
+                value={angle}
+                onChange={(e) => {
+                  const value = Math.min(179, Math.max(1, Number(e.target.value) || 1))
+                  handleTargetAngleChange(index, value.toString())
+                }}
+                min={1}
+                max={179}
+                className="text-xl py-2 px-3"
+              />
+              <span className="text-lg">degrees</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Angles per quadrant input */}
         <div>
           <Label htmlFor="anglesPerQuadrant" className="text-xl">
             Angles per Quadrant
@@ -57,6 +122,8 @@ export default function Settings() {
             className="text-xl py-2 px-3"
           />
         </div>
+
+        {/* Use correct quadrant toggle */}
         <div className="flex items-center space-x-2">
           <Switch
             id="useCorrectQuadrant"
@@ -68,6 +135,8 @@ export default function Settings() {
             Use Specific Quadrant for Correct Angle
           </Label>
         </div>
+
+        {/* Correct quadrant selector (only shown if useCorrectQuadrant is true) */}
         {useCorrectQuadrant && (
           <div className="relative z-10">
             <Label htmlFor="correctQuadrant" className="text-xl">
@@ -97,6 +166,8 @@ export default function Settings() {
             </Select>
           </div>
         )}
+
+        {/* Degree variance input */}
         <div>
           <Label htmlFor="degreeVariance" className="text-xl">
             Degree Variance
@@ -106,12 +177,14 @@ export default function Settings() {
             type="number"
             value={degreeVariance}
             onChange={(e) => handleDegreeVarianceChange(e.target.value)}
-            min={10}
+            min={7.5}
             max={50}
-            step={10}
+            step={2.5}
             className="text-xl py-2 px-3"
           />
         </div>
+
+        {/* Save settings button */}
         <Button
           onClick={handleSubmit}
           className="w-full text-xl py-3 px-6 bg-white text-black border border-black hover:bg-gray-100"
