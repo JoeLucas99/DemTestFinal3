@@ -184,6 +184,7 @@ function generateStimuli(settings: Settings): Stimulus[] {
 
 // Test component: Manages the test logic and UI
 export default function Test() {
+  // Get settings from context and initialize state
   const { settings } = useSettings()
   const [stimuli, setStimuli] = useState<Stimulus[]>(() => generateStimuli(settings))
   const [currentStimulusIndex, setCurrentStimulusIndex] = useState(-1)
@@ -293,6 +294,7 @@ export default function Test() {
     return () => clearTimeout(timer)
   }, [handleStartTest])
 
+  // Show loading state if no stimuli are generated
   if (stimuli.length === 0 || (currentStimulusIndex === -1 && !showFullscreenPrompt)) {
     return <div>Loading...</div>
   }
@@ -307,6 +309,7 @@ export default function Test() {
     <SettingsProvider>
       <div className="flex flex-col items-center justify-center min-h-screen p-4 select-none">
         <div className="w-full max-w-3xl flex flex-col items-center relative">
+          {/* Target angle display */}
           <div className="flex items-center justify-center w-full mb-8 relative">
             <LineCanvas
               angles={[stimulus.targetAngle]}
@@ -314,6 +317,7 @@ export default function Test() {
               size={350} // Increased from 300 to give more space
               className="mr-4"
             />
+            {/* Next/Finish button */}
             {selectedAngle !== null && (
               <div className="absolute right-[-40px] top-1/2 transform -translate-y-1/2">
                 <Button
@@ -325,6 +329,7 @@ export default function Test() {
               </div>
             )}
           </div>
+          {/* Options display */}
           <LineCanvas
             angles={stimulus.options}
             onSelect={handleSelection}
