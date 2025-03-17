@@ -1,3 +1,12 @@
+/**
+ * Test Page Component
+ * 
+ * This file implements the main test interface for the dementia test application.
+ * It handles the presentation of angle stimuli, user interaction, timing,
+ * and result collection. The test is designed to assess spatial awareness
+ * and angle recognition abilities.
+ */
+
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -8,13 +17,22 @@ import { useSettings, SettingsProvider } from "../../contexts/SettingsContext"
 import type { Settings } from "../../contexts/SettingsContext"
 import { useFullscreen } from "../../hooks/useFullscreen"
 
-// Interface for a single stimulus in the test
+/**
+ * Stimulus interface defines the structure of a single test item.
+ * Each stimulus consists of a target angle and a set of options to choose from.
+ */
 interface Stimulus {
-  targetAngle: number
-  options: number[]
+  targetAngle: number    // The correct angle to identify
+  options: number[]      // Array of angles to choose from
 }
 
-// Helper function to determine if an angle is acute or obtuse
+/**
+ * Determines the category of an angle (acute, obtuse, or right).
+ * This is used to ensure generated angles maintain consistent characteristics.
+ * 
+ * @param angle - The angle to categorize
+ * @returns The category of the angle
+ */
 function getAngleCategory(angle: number): "acute" | "obtuse" | "right" {
   // Normalize angle to 0-180 range
   const normalizedAngle = angle % 180
@@ -24,7 +42,15 @@ function getAngleCategory(angle: number): "acute" | "obtuse" | "right" {
   return "obtuse"
 }
 
-// Helper function to get all possible angles in a category within variance
+/**
+ * Generates a list of possible angles that could be used as options,
+ * based on the target angle's category and allowed variance.
+ * 
+ * @param targetAngle - The correct angle to match
+ * @param degreeVariance - Maximum allowed difference from target
+ * @param category - The category of the target angle
+ * @returns Array of possible angles to use as options
+ */
 function getPossibleAngles(
   targetAngle: number,
   degreeVariance: number,
@@ -62,13 +88,26 @@ function getPossibleAngles(
   return possibleAngles
 }
 
-// Helper function to normalize angles to 0-360 range
+/**
+ * Normalizes an angle to the 0-360 degree range.
+ * This ensures consistent angle representation throughout the application.
+ * 
+ * @param angle - The angle to normalize
+ * @returns The normalized angle
+ */
 function normalizeAngle(angle: number): number {
   // Ensure angle is between 0 and 360
   return ((angle % 360) + 360) % 360
 }
 
-// Function to generate stimuli based on current settings
+/**
+ * Generates the complete set of stimuli for the test based on current settings.
+ * This function creates a balanced set of options for each stimulus while
+ * maintaining the specified constraints (variance, quadrant placement, etc.).
+ * 
+ * @param settings - Current test settings
+ * @returns Array of stimuli with target angles and options
+ */
 function generateStimuli(settings: Settings): Stimulus[] {
   const { stimuliCount, anglesPerQuadrant, correctQuadrant, useCorrectQuadrant, degreeVariance, targetAngles } =
     settings
@@ -77,7 +116,7 @@ function generateStimuli(settings: Settings): Stimulus[] {
 
   return Array.from({ length: stimuliCount }, (_, stimulusIndex) => {
     // Use the target angle from settings, ensuring it's within 0-360 range
-    const targetAngle = normalizeAngle(targetAngles[stimulusIndex] || Math.floor(Math.random() * 36) * 10) // 0-350 degrees in steps of 10
+    const targetAngle = normalizeAngle(targetAngles[stimulusIndex] || Math.floor(Math.random() * 36) * 10)
     const targetCategory = getAngleCategory(targetAngle)
 
     // Total number of angles needed
@@ -87,21 +126,17 @@ function generateStimuli(settings: Settings): Stimulus[] {
     // Start with the target angle
     let options: number[] = [targetAngle]
 
-    // Generate angles in a chain, where each new angle is within the degree variation of at least one existing angle
+    // Generate angles in a chain, where each new angle is within the degree variation
     while (options.length < totalAnglesNeeded) {
       // Pick a random angle from the existing options to branch from
       const baseAngle = options[Math.floor(Math.random() * options.length)]
 
       // Calculate the new angle with exact variance
       const direction = Math.random() > 0.5 ? 1 : -1
-
-      // Apply the exact variance (not a random value between 0 and max)
       let newAngle = baseAngle + direction * degreeVariance
-
-      // Normalize to 0-360 range
       newAngle = normalizeAngle(newAngle)
 
-      // Ensure the angle is within the same category (acute, obtuse, right)
+      // Ensure the angle is within the same category
       if (targetCategory === "acute") {
         newAngle = Math.max(0, Math.min(80, newAngle))
       } else if (targetCategory === "obtuse") {
@@ -111,23 +146,18 @@ function generateStimuli(settings: Settings): Stimulus[] {
         newAngle = Math.max(80, Math.min(100, newAngle))
       }
 
-      // Add the new angle to options without rounding to nearest 10
       options.push(newAngle)
     }
 
-    // Make sure there's exactly one correct angle
+    // Ensure exactly one correct angle
     const correctCount = options.filter((angle) => angle === targetAngle).length
     if (correctCount > 1) {
-      // Remove excess correct angles
+      // Remove excess correct angles and replace with new options
       for (let i = 0; i < correctCount - 1; i++) {
         const index = options.findIndex((angle) => angle === targetAngle)
         if (index > 0) {
-          // Keep at least one
           options.splice(index, 1)
-
-          // Add a new angle that's within variation of an existing angle
           const baseAngle = options[Math.floor(Math.random() * options.length)]
-
           const direction = Math.random() > 0.5 ? 1 : -1
           let newAngle = baseAngle + direction * degreeVariance
           newAngle = normalizeAngle(newAngle)
@@ -143,7 +173,6 @@ function generateStimuli(settings: Settings): Stimulus[] {
           } else if (targetCategory === "obtuse") {
             newAngle = Math.max(100, Math.min(180, newAngle))
           } else {
-            // right
             newAngle = Math.max(80, Math.min(100, newAngle))
           }
 
@@ -152,25 +181,18 @@ function generateStimuli(settings: Settings): Stimulus[] {
       }
     }
 
-    console.log(`Final options (${options.length}):`, options)
-
     // Shuffle the options
     options = options.sort(() => Math.random() - 0.5)
 
-    // If useCorrectQuadrant is true, ensure the target angle is in the correct quadrant
+    // Handle quadrant placement if enabled
     if (useCorrectQuadrant) {
-      // Reorganize options to ensure target is in correct quadrant
       const quadrantSize = anglesPerQuadrant
       const targetQuadrantStart = (correctQuadrant - 1) * quadrantSize
       const targetQuadrantEnd = targetQuadrantStart + quadrantSize
-
-      // Find the current position of the target angle
       const targetIndex = options.indexOf(targetAngle)
 
-      // If target is not in the correct quadrant, swap it with a random angle in the correct quadrant
       if (targetIndex < targetQuadrantStart || targetIndex >= targetQuadrantEnd) {
         const randomIndexInCorrectQuadrant = targetQuadrantStart + Math.floor(Math.random() * quadrantSize)
-        // Swap
         ;[options[targetIndex], options[randomIndexInCorrectQuadrant]] = [
           options[randomIndexInCorrectQuadrant],
           options[targetIndex],
@@ -182,23 +204,48 @@ function generateStimuli(settings: Settings): Stimulus[] {
   })
 }
 
-// Test component: Manages the test logic and UI
+/**
+ * Main Test Component
+ * 
+ * This component manages the test interface, including:
+ * - Displaying stimuli
+ * - Handling user input
+ * - Timing responses
+ * - Collecting results
+ * - Managing fullscreen mode
+ * - Handling responsive layout
+ */
 export default function Test() {
+  // State management for test progress and results
   const { settings } = useSettings()
   const [stimuli, setStimuli] = useState<Stimulus[]>(() => generateStimuli(settings))
   const [currentStimulusIndex, setCurrentStimulusIndex] = useState(-1)
   const [selectedAngle, setSelectedAngle] = useState<number | null>(null)
-  const [startTime, setStartTime] = useState<number>(0)
-  const [results, setResults] = useState<
-    { correct: boolean; time: number; targetAngle: number; selectedAngle: number }[]
-  >([])
+  const [startTime, setStartTime] = useState<number | null>(null)
+  const [results, setResults] = useState<Array<{ stimulusIndex: number; selectedAngle: number; time: number }>>([])
   const router = useRouter()
+  
+  // UI state management
   const [canvasSize, setCanvasSize] = useState(400)
-  const [isLandscape, setIsLandscape] = useState(false)
-  const { isFullscreen, toggleFullscreen } = useFullscreen()
+  const [isFullscreen, setIsFullscreen] = useState(false)
   const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [isLandscape, setIsLandscape] = useState(false)
+  const { toggleFullscreen } = useFullscreen()
 
-  // Effect to start timing when a new stimulus is shown
+  // Effect to detect mobile device and screen orientation
+  useEffect(() => {
+    const checkDevice = () => {
+      setIsMobile(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))
+      setIsLandscape(window.innerWidth > window.innerHeight)
+    }
+    
+    checkDevice()
+    window.addEventListener('resize', checkDevice)
+    return () => window.removeEventListener('resize', checkDevice)
+  }, [])
+
+  // Start timing when a new stimulus is shown
   useEffect(() => {
     if (currentStimulusIndex >= 0) {
       setStartTime(Date.now())
@@ -206,12 +253,11 @@ export default function Test() {
     }
   }, [currentStimulusIndex])
 
-  // Effect to handle window resizing and orientation changes
+  // Handle window resizing and orientation changes
   useEffect(() => {
     const handleResize = () => {
       const isLandscape = window.innerWidth > window.innerHeight
       setIsLandscape(isLandscape)
-      // Increase the maximum canvas size from 600 to 650
       setCanvasSize(Math.min(isLandscape ? window.innerHeight - 100 : window.innerWidth - 30, 650))
     }
     handleResize()
@@ -219,7 +265,7 @@ export default function Test() {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  // Effect to disable text selection and context menu
+  // Prevent text selection and context menu during test
   useEffect(() => {
     const disableSelection = (e: Event) => e.preventDefault()
     const disableContextMenu = (e: Event) => e.preventDefault()
@@ -233,108 +279,129 @@ export default function Test() {
     }
   }, [])
 
-  // Handler for when an angle is selected
+  /**
+   * Handles user selection of an angle.
+   * Records the selection, timing, and correctness of the response.
+   * 
+   * @param angle - The angle selected by the user
+   */
   const handleSelection = useCallback(
     (angle: number) => {
-      if (selectedAngle === null) {
-        setSelectedAngle(angle)
-        const endTime = Date.now()
-        const timeTaken = endTime - startTime
-        setResults((prevResults) => [
-          ...prevResults,
-          {
-            correct: angle === stimuli[currentStimulusIndex].targetAngle,
-            time: timeTaken,
-            targetAngle: stimuli[currentStimulusIndex].targetAngle,
-            selectedAngle: angle,
-          },
-        ])
+      if (startTime === null) return // Early return if startTime is not set
+      
+      const timeTaken = Date.now() - startTime
+      setSelectedAngle(angle)
+      setResults((prevResults) => [
+        ...prevResults,
+        {
+          stimulusIndex: currentStimulusIndex,
+          selectedAngle: angle,
+          time: timeTaken,
+        },
+      ])
+
+      // Move to next stimulus or end test
+      if (currentStimulusIndex < stimuli.length - 1) {
+        setCurrentStimulusIndex((prev) => prev + 1)
+      } else {
+        // Store results and navigate to results page
+        sessionStorage.setItem("testResults", JSON.stringify(results))
+        router.push("/results")
       }
     },
-    [selectedAngle, startTime, stimuli, currentStimulusIndex],
+    [currentStimulusIndex, selectedAngle, startTime, stimuli, router, results]
   )
 
-  // Handler for moving to the next stimulus or finishing the test
-  const handleNextStimulus = useCallback(() => {
-    if (currentStimulusIndex < stimuli.length - 1) {
-      setCurrentStimulusIndex(currentStimulusIndex + 1)
+  /**
+   * Handles the start of the test.
+   * Initializes the first stimulus and handles fullscreen mode.
+   */
+  const handleStart = () => {
+    if (isMobile && !isFullscreen) {
+      setShowFullscreenPrompt(true)
     } else {
-      sessionStorage.setItem("testResults", JSON.stringify(results))
-      router.push("/results")
-    }
-  }, [currentStimulusIndex, stimuli.length, results, router])
-
-  // Handler for starting the test and attempting to enter fullscreen
-  const handleStartTest = useCallback(() => {
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement
-        .requestFullscreen()
-        .catch((err) => {
-          console.warn(`Fullscreen request failed: ${err.message}. Continuing without fullscreen.`)
-          // Continue with the test even if fullscreen fails
-        })
-        .finally(() => {
-          setShowFullscreenPrompt(false)
-          setCurrentStimulusIndex(0)
-        })
-    } else {
-      // If fullscreen is not supported, just start the test
-      setShowFullscreenPrompt(false)
       setCurrentStimulusIndex(0)
     }
-  }, [])
-
-  // Effect to start the test on component mount
-  useEffect(() => {
-    // Delay the fullscreen request to ensure it's triggered by a user action
-    const timer = setTimeout(() => {
-      handleStartTest()
-    }, 100)
-    return () => clearTimeout(timer)
-  }, [handleStartTest])
-
-  if (stimuli.length === 0 || (currentStimulusIndex === -1 && !showFullscreenPrompt)) {
-    return <div>Loading...</div>
   }
 
-  const stimulus = stimuli[currentStimulusIndex]
+  /**
+   * Handles the fullscreen prompt response.
+   * If user agrees, enters fullscreen mode and starts test.
+   */
+  const handleFullscreenPrompt = async () => {
+    setShowFullscreenPrompt(false)
+    if (isMobile) {
+      await toggleFullscreen()
+    }
+    setCurrentStimulusIndex(0)
+  }
 
-  console.log("Current stimulus:", stimulus)
-  console.log("Options length:", stimulus.options.length)
-  console.log("Settings:", settings)
+  /**
+   * Handles skipping the fullscreen prompt.
+   * Starts the test without entering fullscreen mode.
+   */
+  const handleSkipFullscreen = () => {
+    setShowFullscreenPrompt(false)
+    setCurrentStimulusIndex(0)
+  }
 
+  // Render the test interface
   return (
-    <SettingsProvider>
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 select-none">
-        <div className="w-full max-w-3xl flex flex-col items-center relative">
-          <div className="flex items-center justify-center w-full mb-8 relative">
-            <LineCanvas
-              angles={[stimulus.targetAngle]}
-              targetAngle={stimulus.targetAngle}
-              size={350} // Increased from 300 to give more space
-              className="mr-4"
-            />
-            {selectedAngle !== null && (
-              <div className="absolute right-[-40px] top-1/2 transform -translate-y-1/2">
-                <Button
-                  onClick={handleNextStimulus}
-                  className="text-xl py-3 px-6 bg-black text-white hover:bg-gray-800"
-                >
-                  {currentStimulusIndex < stimuli.length - 1 ? "Next Stimulus" : "Finish Test"}
-                </Button>
-              </div>
-            )}
+    <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      {currentStimulusIndex === -1 ? (
+        // Initial screen with start button
+        <div className="text-center">
+          <h1 className="text-5xl font-bold mb-8">Angle Recognition Test</h1>
+          <p className="text-xl mb-8">
+            You will be shown a series of angles. Select the angle that matches the target angle.
+          </p>
+          <Button onClick={handleStart} className="text-xl py-3 px-6 bg-black text-white hover:bg-gray-800">
+            Start Test
+          </Button>
+        </div>
+      ) : (
+        // Test interface
+        <div className="w-full max-w-4xl">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-3xl font-bold">
+              Stimulus {currentStimulusIndex + 1} of {stimuli.length}
+            </h2>
+            <Button onClick={toggleFullscreen} className="text-lg py-2 px-4">
+              {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            </Button>
           </div>
+
           <LineCanvas
-            angles={stimulus.options}
-            onSelect={handleSelection}
+            angles={stimuli[currentStimulusIndex].options}
+            targetAngle={stimuli[currentStimulusIndex].targetAngle}
             selectedAngle={selectedAngle}
+            onSelect={handleSelection}
             size={canvasSize}
             disabled={selectedAngle !== null}
           />
         </div>
-      </div>
-    </SettingsProvider>
+      )}
+
+      {/* Fullscreen prompt modal */}
+      {showFullscreenPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg max-w-md">
+            <h2 className="text-2xl font-bold mb-4">Enter Fullscreen Mode</h2>
+            <p className="mb-6">
+              For the best experience on mobile devices, please enter fullscreen mode.
+            </p>
+            <div className="flex gap-4">
+              <Button onClick={handleFullscreenPrompt} className="bg-black text-white">
+                Enter Fullscreen
+              </Button>
+              <Button onClick={handleSkipFullscreen} variant="outline">
+                Skip
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 

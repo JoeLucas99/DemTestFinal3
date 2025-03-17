@@ -1,3 +1,14 @@
+/**
+ * Settings Page Component
+ * 
+ * This component provides a user interface for configuring test parameters:
+ * - Number of stimuli to present
+ * - Target angles for each stimulus
+ * - Number of angles per quadrant
+ * - Quadrant placement rules
+ * - Degree variance for angle options
+ */
+
 "use client"
 
 import type React from "react"
@@ -11,10 +22,12 @@ import { useSettings } from "../../contexts/SettingsContext"
 import { useState, useEffect } from "react"
 
 export default function Settings() {
+  // Get settings and update function from context
   const { settings, updateSettings } = useSettings()
   const { stimuliCount, anglesPerQuadrant, correctQuadrant, useCorrectQuadrant, degreeVariance, targetAngles } =
     settings
   const router = useRouter()
+  // Local state for managing target angle inputs
   const [localTargetAngles, setLocalTargetAngles] = useState<string[]>([])
 
   // Initialize local target angles from settings
@@ -22,6 +35,10 @@ export default function Settings() {
     setLocalTargetAngles(targetAngles.map((angle) => angle.toString()))
   }, [targetAngles])
 
+  /**
+   * Handles form submission.
+   * Converts local target angles to numbers and updates settings.
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -32,6 +49,10 @@ export default function Settings() {
     router.push("/")
   }
 
+  /**
+   * Handles changes to the degree variance setting.
+   * Rounds the value to nearest 2.5 and clamps between 7.5 and 50.
+   */
   const handleDegreeVarianceChange = (value: string) => {
     const numValue = Number.parseFloat(value)
     // Round to the nearest 2.5 instead of 10
@@ -39,7 +60,10 @@ export default function Settings() {
     updateSettings({ degreeVariance: roundedValue })
   }
 
-  // Update the handleTargetAngleChange function to clamp values between 1 and 179
+  /**
+   * Handles changes to individual target angles.
+   * Clamps values between 1 and 179 degrees.
+   */
   const handleTargetAngleChange = (index: number, value: string) => {
     const newAngles = [...localTargetAngles]
     // Ensure the value is within 1-179 range
@@ -53,14 +77,20 @@ export default function Settings() {
     setLocalTargetAngles(newAngles)
   }
 
+  /**
+   * Handles changes to the number of stimuli.
+   * Updates settings and triggers regeneration of target angles.
+   */
   const handleStimuliCountChange = (value: number) => {
     updateSettings({ stimuliCount: value })
   }
 
+  // Render the settings form
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <h1 className="text-5xl font-bold mb-8">Settings</h1>
       <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6">
+        {/* Number of stimuli input */}
         <div>
           <Label htmlFor="stimuliCount" className="text-xl">
             Number of Stimuli
@@ -75,7 +105,7 @@ export default function Settings() {
           />
         </div>
 
-        {/* Target Angles */}
+        {/* Target angles inputs */}
         <div className="space-y-3">
           <Label className="text-xl">Target Angles</Label>
           {localTargetAngles.map((angle, index) => (
@@ -100,6 +130,7 @@ export default function Settings() {
           ))}
         </div>
 
+        {/* Angles per quadrant input */}
         <div>
           <Label htmlFor="anglesPerQuadrant" className="text-xl">
             Angles per Quadrant
@@ -115,6 +146,7 @@ export default function Settings() {
           />
         </div>
 
+        {/* Quadrant placement toggle and selector */}
         <div className="flex items-center space-x-2">
           <Switch
             id="useCorrectQuadrant"
@@ -127,6 +159,7 @@ export default function Settings() {
           </Label>
         </div>
 
+        {/* Quadrant selector (shown when useCorrectQuadrant is true) */}
         {useCorrectQuadrant && (
           <div className="relative z-10">
             <Label htmlFor="correctQuadrant" className="text-xl">
@@ -157,6 +190,7 @@ export default function Settings() {
           </div>
         )}
 
+        {/* Degree variance input */}
         <div>
           <Label htmlFor="degreeVariance" className="text-xl">
             Degree Variance
@@ -173,6 +207,7 @@ export default function Settings() {
           />
         </div>
 
+        {/* Save settings button */}
         <Button
           onClick={handleSubmit}
           className="w-full text-xl py-3 px-6 bg-white text-black border border-black hover:bg-gray-100"
