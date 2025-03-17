@@ -104,12 +104,6 @@ This is the main component for conducting the test. It manages:
 
    npm install
 
-
-3. Start the development server:
-   npm run dev
-
-4. Open http://localhost:3000 in your browser
-
 ## Deployment
 
 The application is configured for deployment to GitHub Pages:
