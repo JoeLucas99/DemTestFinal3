@@ -11,6 +11,7 @@ export default function StyleWrapper({ children }: { children: React.ReactNode }
       {children}
       <style jsx global>{`
         /* Disable user selection across the entire application */
+        /* This prevents text selection which could interfere with the test */
         body {
           user-select: none;
           -webkit-user-select: none;
@@ -19,6 +20,7 @@ export default function StyleWrapper({ children }: { children: React.ReactNode }
         }
         
         /* Disable dragging and touch callout for better mobile experience */
+        /* These styles prevent unwanted interactions on mobile devices */
         * {
           -webkit-user-drag: none;
           -khtml-user-drag: none;
@@ -34,6 +36,7 @@ export default function StyleWrapper({ children }: { children: React.ReactNode }
         }
 
         /* Handle landscape orientation for better mobile experience */
+        /* This ensures proper display when device is rotated */
         @media (orientation: landscape) {
           .landscape-rotate {
             display: flex;

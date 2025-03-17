@@ -39,6 +39,7 @@ export default function FullscreenButton() {
   }, [])
 
   // Render the fullscreen toggle button with appropriate icon
+  // Shows different icons based on current fullscreen state
   return (
     <Button
       className="fixed top-4 left-4 z-50 bg-black text-white hover:bg-gray-800 text-xl py-3 px-6"
