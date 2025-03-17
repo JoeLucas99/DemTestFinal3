@@ -15,47 +15,141 @@ This application is designed to assess cognitive function, particularly spatial 
 
 ## Features
 
-- Interactive angle matching test
-- Customizable test settings (number of stimuli, angles per quadrant, etc.)
+- Interactive angle matching test with customizable parameters
+- Configurable test settings:
+  - Number of stimuli
+  - Target angles per quadrant
+  - Degree variance for options
+  - Specific quadrant selection
 - Fullscreen mode for distraction-free testing
-- Results page with performance summary
+- Results page with detailed performance metrics
 - Responsive design for various device sizes
+- Dark/Light mode support
+- Mobile-friendly interface
 
 ## Project Structure
 
 - `app/`: Contains the main pages of the application
-  - `page.tsx`: Home page
+  - `page.tsx`: Home page with test start options
   - `test/page.tsx`: Test page where the actual assessment takes place
   - `results/page.tsx`: Results page displaying the test outcomes
   - `settings/page.tsx`: Settings page for customizing the test parameters
+  - `layout.tsx`: Root layout with theme provider
+  - `globals.css`: Global styles and Tailwind configuration
 - `components/`: Contains reusable React components
   - `LineCanvas.tsx`: Renders the visual representation of angles
   - `FullscreenButton.tsx`: Toggles fullscreen mode
   - `ContextMenuWrapper.tsx`: Prevents default context menu behavior
+  - `StyleWrapper.tsx`: Applies global styles and prevents text selection
+  - `theme-provider.tsx`: Manages theme state (dark/light mode)
 - `contexts/`: Contains React contexts
   - `SettingsContext.tsx`: Manages global settings state
 - `hooks/`: Custom React hooks
   - `useFullscreen.ts`: Hook for managing fullscreen functionality
+  - `use-mobile.tsx`: Hook for detecting mobile devices
+  - `use-toast.ts`: Hook for managing toast notifications
+- `lib/`: Utility functions and configurations
+  - `utils.ts`: Common utility functions
+  - `types.d.ts`: TypeScript type definitions
 
 ## Key Components
 
 ### LineCanvas
-This component is responsible for rendering the lines at specified angles. It uses the HTML5 Canvas API for drawing and implements hover and click interactions.
+This component is responsible for rendering the lines at specified angles. It uses the HTML5 Canvas API for drawing and implements hover and click interactions. The component handles:
+- Drawing lines at specified angles
+- Interactive hover effects
+- Click detection for angle selection
+- Responsive canvas sizing
 
 ### SettingsContext
-This context provides a global state for app settings, allowing them to be accessed and modified across different components.
+This context provides a global state for app settings, allowing them to be accessed and modified across different components. It manages:
+- Number of stimuli
+- Target angles configuration
+- Degree variance settings
+- Quadrant selection
 
 ### Test Component (in test/page.tsx)
-This is the main component for conducting the test. It manages the state of the current question, user selection, and test results.
+This is the main component for conducting the test. It manages:
+- Test state and progression
+- User selection handling
+- Timing measurements
+- Results calculation
+- Fullscreen mode integration
 
 ## How It Works
 
 1. The user starts on the home page and can choose to start the test or adjust settings.
-2. During the test, the user is presented with a series of stimuli, each consisting of a target angle and multiple option angles.
-3. The user must select the angle that matches the target angle.
-4. After completing all stimuli, the user is shown their results, including accuracy and response times.
+2. In the settings page, users can configure:
+   - Number of stimuli to complete
+   - Target angles for each quadrant
+   - Degree variance for option angles
+   - Whether to use specific quadrants
+3. During the test:
+   - Users are presented with a target angle
+   - They must select the matching angle from multiple options
+   - Each selection is timed and recorded
+   - Progress is shown throughout the test
+4. After completing all stimuli, users see their results, including:
+   - Overall accuracy percentage
+   - Average response time
+   - Detailed breakdown of responses
 
 ## Installation
 
 1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/DemTestFinal3.git
+   cd DemTestFinal3
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Create a `.env.local` file in the root directory (if needed for any environment variables)
+
+4. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+## Running Locally
+
+The application can be run in development mode with:
+```bash
+npm run dev
+```
+
+For production build:
+```bash
+npm run build
+npm start
+```
+
+## Deployment
+
+The application is configured for deployment to GitHub Pages:
+
+1. Push your changes to the main branch
+2. GitHub Actions will automatically:
+   - Build the application
+   - Deploy to GitHub Pages
+   - Update the live site
+
+The deployed site will be available at: `https://yourusername.github.io/DemTestFinal3`
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
 
