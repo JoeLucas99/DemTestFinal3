@@ -24,7 +24,6 @@ This application is designed to assess cognitive function, particularly spatial 
 - Fullscreen mode for distraction-free testing
 - Results page with detailed performance metrics
 - Responsive design for various device sizes
-- Dark/Light mode support
 - Mobile-friendly interface
 
 ## Project Structure
@@ -47,7 +46,6 @@ This application is designed to assess cognitive function, particularly spatial 
 - `hooks/`: Custom React hooks
   - `useFullscreen.ts`: Hook for managing fullscreen functionality
   - `use-mobile.tsx`: Hook for detecting mobile devices
-  - `use-toast.ts`: Hook for managing toast notifications
 - `lib/`: Utility functions and configurations
   - `utils.ts`: Common utility functions
   - `types.d.ts`: TypeScript type definitions
