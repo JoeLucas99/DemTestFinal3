@@ -104,13 +104,3 @@ export function useSettings() {
   return context
 }
 
-function generateStimuli(settings: Settings): Stimulus[] {
-  if (!settings) {
-    console.error('Settings not available')
-    return []
-  }
-
-  const { stimuliCount, anglesPerQuadrant, correctQuadrant, useCorrectQuadrant, degreeVariance, targetAngles } = settings
-  // Rest of your function...
-}
-
