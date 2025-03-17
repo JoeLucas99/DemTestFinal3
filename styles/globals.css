@@ -6,15 +6,19 @@
 @tailwind utilities;
 
 /* Add any global styles here */
+/* Set default background and text colors for the entire application */
 body {
   @apply bg-white text-black;
 }
 
 /* Ensure proper styling in fullscreen mode */
+/* This ensures consistent appearance when the app is in fullscreen */
 :fullscreen {
   @apply bg-white text-black;
 }
 
+/* Custom styles for Radix UI Select component */
+/* These styles ensure proper positioning and appearance of the select dropdown */
 .radix-select-content {
   position: absolute !important;
   width: var(--radix-select-trigger-width);
@@ -26,10 +30,12 @@ body {
   z-index: 1000;
 }
 
+/* Style the viewport container for select options */
 .radix-select-viewport {
   padding: 5px;
 }
 
+/* Style individual select options */
 .radix-select-item {
   display: flex;
   align-items: center;
@@ -37,6 +43,7 @@ body {
   user-select: none;
 }
 
+/* Style for highlighted/selected option */
 .radix-select-item[data-highlighted] {
   outline: none;
   background-color: #f3f4f6;
