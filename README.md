@@ -46,6 +46,7 @@ This application is designed to assess cognitive function, particularly spatial 
 - `hooks/`: Custom React hooks
   - `useFullscreen.ts`: Hook for managing fullscreen functionality
   - `use-mobile.tsx`: Hook for detecting mobile devices
+  - `use-toast.ts`: Hook for managing toast notifications
 - `lib/`: Utility functions and configurations
   - `utils.ts`: Common utility functions
   - `types.d.ts`: TypeScript type definitions
@@ -95,37 +96,18 @@ This is the main component for conducting the test. It manages:
 ## Installation
 
 1. Clone the repository:
-   ```bash
    git clone https://github.com/yourusername/DemTestFinal3.git
    cd DemTestFinal3
-   ```
 
 2. Install dependencies:
-   ```bash
+
    npm install
-   ```
 
-3. Create a `.env.local` file in the root directory (if needed for any environment variables)
 
-4. Start the development server:
-   ```bash
+3. Start the development server:
    npm run dev
-   ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser
-
-## Running Locally
-
-The application can be run in development mode with:
-```bash
-npm run dev
-```
-
-For production build:
-```bash
-npm run build
-npm start
-```
+4. Open http://localhost:3000 in your browser
 
 ## Deployment
 
@@ -136,18 +118,3 @@ The application is configured for deployment to GitHub Pages:
    - Build the application
    - Deploy to GitHub Pages
    - Update the live site
-
-The deployed site will be available at: `https://yourusername.github.io/DemTestFinal3`
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
