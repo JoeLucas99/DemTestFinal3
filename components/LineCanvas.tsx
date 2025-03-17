@@ -5,24 +5,26 @@ import { useRef, useEffect, useState, useCallback } from "react"
 
 // Props interface for the LineCanvas component
 interface LineCanvasProps {
-  angles: number[]
-  targetAngle?: number
-  onSelect?: (angle: number) => void
-  selectedAngle?: number | null
-  className?: string
-  size?: number
-  disabled?: boolean
+  angles: number[] // Array of angles to display
+  targetAngle?: number // Optional target angle to highlight
+  onSelect?: (angle: number) => void // Callback when an angle is selected
+  selectedAngle?: number | null // Currently selected angle
+  className?: string // Additional CSS classes
+  size?: number // Canvas size in pixels
+  disabled?: boolean // Whether the canvas is interactive
 }
 
 // Interface for a single line in the canvas
 interface Line {
-  angle: number
-  id: string
-  quadrant: number
-  position: { x: number; y: number }
+  angle: number // The angle of the line in degrees
+  id: string // Unique identifier for the line
+  quadrant: number // Which quadrant the line is in (0-3)
+  position: { x: number; y: number } // Position of the line's starting point
 }
 
 // LineCanvas component: Renders angles as lines on a canvas
+// This component is the core visualization component for the test,
+// displaying angles as lines and handling user interaction
 export default function LineCanvas({
   angles,
   targetAngle,
@@ -32,17 +34,20 @@ export default function LineCanvas({
   size = 400,
   disabled = false,
 }: LineCanvasProps) {
+  // Refs and state for canvas management
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [hoveredLine, setHoveredLine] = useState<Line | null>(null)
   const [lines, setLines] = useState<Line[]>([])
   const [selectedLineId, setSelectedLineId] = useState<string | null>(null)
 
+  // Debug logging for angles and lines
   useEffect(() => {
     console.log("Angles received:", angles)
     console.log("Lines generated:", lines)
   }, [angles, lines])
 
   // Initialize lines with unique IDs, quadrants, and positions
+  // This effect runs whenever angles or size changes
   useEffect(() => {
     if (angles.length === 0) return
 
@@ -117,7 +122,8 @@ export default function LineCanvas({
     setLines(newLines)
   }, [angles, size])
 
-  // Function to draw a line on the canvas - update to make target angles larger
+  // Function to draw a line on the canvas
+  // This function handles the actual rendering of lines with proper angle calculations
   const drawLine = useCallback(
     (
       ctx: CanvasRenderingContext2D,
@@ -145,7 +151,8 @@ export default function LineCanvas({
     [size],
   )
 
-  // Effect to draw lines on the canvas - update to make target angles longer
+  // Effect to draw lines on the canvas
+  // This effect handles the actual rendering of all lines
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -173,7 +180,8 @@ export default function LineCanvas({
     }
   }, [lines, targetAngle, selectedLineId, hoveredLine, size, drawLine, disabled])
 
-  // Update the isPointNearLine function to be much more precise
+  // Function to check if a point is near a line
+  // This is used for hit detection when clicking on lines
   const isPointNearLine = useCallback(
     (x: number, y: number, line: Line) => {
       const lineLength = size / 7 // Match the shorter line length used for options
@@ -224,6 +232,7 @@ export default function LineCanvas({
   )
 
   // Handler for canvas click events
+  // This handles user selection of angles
   const handleCanvasClick = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>) => {
       if (disabled || !onSelect || selectedAngle !== null) return
@@ -256,6 +265,7 @@ export default function LineCanvas({
   )
 
   // Handler for canvas mouse move events
+  // This handles hover effects on lines
   const handleCanvasMouseMove = useCallback(
     (event: React.MouseEvent<HTMLCanvasElement>) => {
       if (disabled) return
@@ -283,6 +293,7 @@ export default function LineCanvas({
     [lines, isPointNearLine, disabled],
   )
 
+  // Render the canvas element with event handlers
   return (
     <canvas
       ref={canvasRef}
