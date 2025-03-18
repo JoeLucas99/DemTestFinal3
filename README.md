@@ -9,9 +9,7 @@ This application is designed to assess cognitive function, particularly spatial 
 3. [Key Components](#key-components)
 4. [How It Works](#how-it-works)
 5. [Installation](#installation)
-6. [Running Locally](#running-locally)
-7. [Deployment](#deployment)
-8. [Contributing](#contributing)
+6. [Deployment](#deployment)
 
 ## Features
 
@@ -96,17 +94,24 @@ This is the main component for conducting the test. It manages:
 ## Installation
 
 1. Clone the repository:
-   git clone https://github.com/yourusername/DemTestFinal3.git
+   git clone https://github.com/grbaliga/webanglematch.git
    
-   cd DemTestFinal3
+   cd webanglematch
 
-2. Install dependencies:
+2. Install dependencies if needed:
 
    npm install
 
 ## Deployment
 
-The application is configured for deployment to GitHub Pages:
+The application is configured for deployment to GitHub Pages. 
+For GitHub pages to work your repository must be set to Public if you're using free GitHub, but you can use GitHub Pages on a 
+private repository if you have a paid version of GitHub.
+
+If you haven't already done so:
+  1. In your repository go to: Settings > Pages > Source > select GitHub Actions from the Source dropdown menu
+  2. Change the "push: branches: ["main"]" branch to your desired branch in .github\workflows/ nextjs.yml 
+  3. Change the "basePath: '/webanglematch'" your GitHub repositories's name in next.config.mjs
 
 1. Push your changes to the main branch
 2. GitHub Actions will automatically:
