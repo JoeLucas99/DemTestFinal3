@@ -10,7 +10,7 @@ const nextConfig = {
   
   // Set the base path for GitHub Pages deployment
   // This should match your repository name
-  basePath: '/webanglematch',
+  basePath: '/DemTestFinal3',
 }
 
 export default nextConfig;
