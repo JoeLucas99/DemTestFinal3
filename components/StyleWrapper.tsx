@@ -9,7 +9,7 @@ export default function StyleWrapper({ children }: { children: React.ReactNode }
   return (
     <>
       {children}
-      <style jsx global>{`
+      <style>{`
         /* Disable user selection across the entire application */
         /* This prevents text selection which could interfere with the test */
         body {

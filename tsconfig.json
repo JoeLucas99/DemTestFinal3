@@ -40,7 +40,7 @@
     }
   },
   // Include TypeScript and type declaration files
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "../hold/use-toast.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   // Exclude node_modules from compilation
   "exclude": ["node_modules"]
 }
