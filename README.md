@@ -42,8 +42,7 @@ This application is designed to assess cognitive function, particularly spatial 
   - `SettingsContext.tsx`: Manages global settings state
 - `hooks/`: Custom React hooks
   - `useFullscreen.ts`: Hook for managing fullscreen functionality
-  - `use-mobile.tsx`: Hook for detecting mobile devices
-- `lib/`: Utility functions and configurations
+  - `lib/`: Utility functions and configurations
   - `utils.ts`: Common utility functions
   - `types.d.ts`: TypeScript type definitions
 
@@ -109,7 +108,7 @@ private repository if you have a paid version of GitHub.
 If you haven't already done so:
   1. In your repository go to: Settings > Pages > Source > select GitHub Actions from the Source dropdown menu
   2. Change the "push: branches: ["main"]" branch to your desired branch in .github\workflows/ nextjs.yml 
-  3. Change the "basePath: '/webanglematch'" your GitHub repositories's name in next.config.mjs
+  3. Change the "basePath: '/webanglematch'" to your GitHub repositories's name in next.config.mjs
 
 1. Push your changes to the main branch
 2. GitHub Actions will automatically:
